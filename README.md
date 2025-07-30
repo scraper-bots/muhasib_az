@@ -1,24 +1,939 @@
-# BirJob Android Development Guide
+# BirJob Android Development Guide - COMPLETE IMPLEMENTATION
 
 ## Table of Contents
 1. [Project Overview](#project-overview)
-2. [Architecture & Technology Stack](#architecture--technology-stack)
-3. [Project Structure](#project-structure)
-4. [Core Features Implementation](#core-features-implementation)
-5. [Backend Integration](#backend-integration)
-6. [UI/UX Implementation](#uiux-implementation)
-7. [Push Notifications](#push-notifications)
-8. [Data Models](#data-models)
-9. [Services & Managers](#services--managers)
-10. [Views & Screens](#views--screens)
-11. [Navigation Flow](#navigation-flow)
-12. [Testing Strategy](#testing-strategy)
-13. [Performance Optimization](#performance-optimization)
-14. [Deployment Guide](#deployment-guide)
+2. [Complete Development Environment Setup](#complete-development-environment-setup)
+3. [Architecture & Technology Stack](#architecture--technology-stack)
+4. [Detailed Project Structure](#detailed-project-structure)
+5. [Database Layer - Complete Room Implementation](#database-layer---complete-room-implementation)
+6. [Network Layer - Complete Retrofit Implementation](#network-layer---complete-retrofit-implementation)
+7. [Repository Layer - Complete Implementation](#repository-layer---complete-implementation)
+8. [Dependency Injection - Complete Hilt Setup](#dependency-injection---complete-hilt-setup)
+9. [ViewModels - Complete Implementation](#viewmodels---complete-implementation)
+10. [UI Layer - Complete Jetpack Compose Implementation](#ui-layer---complete-jetpack-compose-implementation)
+11. [Complete Navigation Implementation](#complete-navigation-implementation)
+12. [Push Notifications - Complete FCM Implementation](#push-notifications---complete-fcm-implementation)
+13. [Background Services - Complete Implementation](#background-services---complete-implementation)
+14. [Complete Analytics Implementation](#complete-analytics-implementation)
+15. [Chat Feature - Complete Implementation](#chat-feature---complete-implementation)
+16. [Complete Testing Implementation](#complete-testing-implementation)
+17. [Security & Privacy - Complete Implementation](#security--privacy---complete-implementation)
+18. [Performance Optimization - Detailed Implementation](#performance-optimization---detailed-implementation)
+19. [Complete CI/CD Pipeline](#complete-cicd-pipeline)
+20. [Deployment - Complete Guide](#deployment---complete-guide)
+21. [Monitoring & Crashlytics](#monitoring--crashlytics)
+22. [Complete Feature Comparison iOS vs Android](#complete-feature-comparison-ios-vs-android)
 
 ---
 
 ## Project Overview
+
+**App Name**: BirJob (Android Version)  
+**Package Name**: `com.birjob.android`  
+**Platform**: Android (Kotlin)  
+**Minimum SDK**: API 24 (Android 7.0) - 87% market coverage  
+**Target SDK**: API 34 (Android 14)  
+**Architecture**: Clean Architecture + MVVM + Repository Pattern  
+**UI Framework**: Jetpack Compose  
+**Backend**: REST API with Firebase integration  
+
+### Complete Feature Set
+```
+Core Features:
+├── 🔍 Job Search & Filtering
+│   ├── Real-time search with debouncing
+│   ├── Advanced filters (location, salary, remote, etc.)
+│   ├── Search history and suggestions
+│   └── Save/unsave jobs functionality
+├── 🔔 Smart Notification System
+│   ├── FCM push notifications
+│   ├── Notification inbox with categorization
+│   ├── Mark as read/unread functionality
+│   ├── Bulk operations (mark all as read, delete)
+│   └── Deep linking from notifications
+├── 📊 Analytics Dashboard
+│   ├── Market overview with real-time stats
+│   ├── Keyword trends with interactive charts
+│   ├── Company analytics and insights
+│   ├── Remote work analysis
+│   └── Personal job search analytics
+├── 🤖 AI Chat Assistant
+│   ├── Job recommendations
+│   ├── Career advice
+│   ├── Resume feedback
+│   └── Interview preparation
+├── 👤 Profile Management
+│   ├── User preferences
+│   ├── Keyword management
+│   ├── Notification settings
+│   └── Privacy controls
+└── 🎨 Adaptive UI
+    ├── Material Design 3
+    ├── Dark/Light theme
+    ├── Dynamic colors (Android 12+)
+    └── Responsive design for tablets
+```
+
+---
+
+## Complete Development Environment Setup
+
+### **Step 1: Install Required Software**
+
+#### Android Studio Installation
+```bash
+# Download Android Studio from: https://developer.android.com/studio
+# Install with these components:
+- Android SDK Platform 34
+- Android SDK Build-Tools 34.0.0
+- Android Emulator
+- Intel x86 Emulator Accelerator (HAXM installer)
+- Google Play services
+- Google Repository
+```
+
+#### SDK Configuration
+```bash
+# Set ANDROID_HOME environment variable
+export ANDROID_HOME=$HOME/Library/Android/sdk  # macOS
+export ANDROID_HOME=$HOME/Android/Sdk          # Linux
+set ANDROID_HOME=C:\Users\%USERNAME%\AppData\Local\Android\Sdk  # Windows
+
+# Add to PATH
+export PATH=$PATH:$ANDROID_HOME/emulator
+export PATH=$PATH:$ANDROID_HOME/tools
+export PATH=$PATH:$ANDROID_HOME/tools/bin
+export PATH=$PATH:$ANDROID_HOME/platform-tools
+```
+
+#### Required SDK Components
+```bash
+# Install via SDK Manager or command line:
+sdkmanager "platforms;android-34"
+sdkmanager "platforms;android-24"  # Minimum supported
+sdkmanager "build-tools;34.0.0"
+sdkmanager "extras;google;google_play_services"
+sdkmanager "extras;google;m2repository"
+sdkmanager "extras;android;m2repository"
+```
+
+### **Step 2: Create New Project**
+
+#### Project Creation Script
+```bash
+# Create new project directory
+mkdir BirJobAndroid && cd BirJobAndroid
+
+# Initialize git
+git init
+git remote add origin https://github.com/yourusername/birjob-android.git
+
+# Create basic project structure
+mkdir -p app/src/main/java/com/birjob/android
+mkdir -p app/src/main/res
+mkdir -p app/src/test/java/com/birjob/android
+mkdir -p app/src/androidTest/java/com/birjob/android
+```
+
+#### settings.gradle.kts
+```kotlin
+pluginManagement {
+    repositories {
+        google()
+        mavenCentral()
+        gradlePluginPortal()
+    }
+}
+
+dependencyResolutionManagement {
+    repositoriesMode.set(RepositoriesMode.FAIL_ON_PROJECT_REPOS)
+    repositories {
+        google()
+        mavenCentral()
+        maven { url = uri("https://jitpack.io") }
+    }
+}
+
+rootProject.name = "BirJob"
+include(":app")
+```
+
+#### Project-level build.gradle.kts
+```kotlin
+buildscript {
+    extra.apply {
+        set("compose_version", "1.5.8")
+        set("compose_compiler_version", "1.5.8")
+        set("kotlin_version", "1.9.22")
+        set("hilt_version", "2.48")
+        set("room_version", "2.6.1")
+        set("retrofit_version", "2.9.0")
+        set("okhttp_version", "4.12.0")
+        set("lifecycle_version", "2.7.0")
+        set("navigation_version", "2.7.6")
+    }
+}
+
+plugins {
+    id("com.android.application") version "8.2.2" apply false
+    id("org.jetbrains.kotlin.android") version "1.9.22" apply false
+    id("com.google.dagger.hilt.android") version "2.48" apply false
+    id("com.google.gms.google-services") version "4.4.0" apply false
+    id("com.google.firebase.crashlytics") version "2.9.9" apply false
+    id("kotlin-parcelize") apply false
+    id("org.jetbrains.kotlin.plugin.serialization") version "1.9.22" apply false
+}
+```
+
+### **Step 3: Complete App-level Configuration**
+
+#### app/build.gradle.kts (Complete Configuration)
+```kotlin
+plugins {
+    id("com.android.application")
+    id("org.jetbrains.kotlin.android")
+    id("kotlin-kapt")
+    id("kotlin-parcelize")
+    id("dagger.hilt.android.plugin")
+    id("com.google.gms.google-services")
+    id("com.google.firebase.crashlytics")
+    id("org.jetbrains.kotlin.plugin.serialization")
+}
+
+android {
+    namespace = "com.birjob.android"
+    compileSdk = 34
+
+    defaultConfig {
+        applicationId = "com.birjob.android"
+        minSdk = 24
+        targetSdk = 34
+        versionCode = 1
+        versionName = "1.0.0"
+
+        testInstrumentationRunner = "com.birjob.android.CustomTestRunner"
+        vectorDrawables {
+            useSupportLibrary = true
+        }
+
+        // Room schema export
+        kapt {
+            arguments {
+                arg("room.schemaLocation", "$projectDir/schemas")
+            }
+        }
+
+        buildConfigField("String", "VERSION_NAME", "\"${defaultConfig.versionName}\"")
+        buildConfigField("int", "VERSION_CODE", "${defaultConfig.versionCode}")
+    }
+
+    buildTypes {
+        debug {
+            isDebuggable = true
+            applicationIdSuffix = ".debug"
+            versionNameSuffix = "-debug"
+            buildConfigField("String", "API_BASE_URL", "\"https://birjob-backend-dev.herokuapp.com/\"")
+            buildConfigField("String", "WEBSOCKET_URL", "\"wss://birjob-backend-dev.herokuapp.com/ws\"")
+            buildConfigField("boolean", "ENABLE_LOGGING", "true")
+            buildConfigField("boolean", "ENABLE_CRASH_REPORTING", "false")
+            isMinifyEnabled = false
+            isShrinkResources = false
+        }
+
+        release {
+            isMinifyEnabled = true
+            isShrinkResources = true
+            proguardFiles(
+                getDefaultProguardFile("proguard-android-optimize.txt"),
+                "proguard-rules.pro"
+            )
+            buildConfigField("String", "API_BASE_URL", "\"https://birjob-backend.herokuapp.com/\"")
+            buildConfigField("String", "WEBSOCKET_URL", "\"wss://birjob-backend.herokuapp.com/ws\"")
+            buildConfigField("boolean", "ENABLE_LOGGING", "false")
+            buildConfigField("boolean", "ENABLE_CRASH_REPORTING", "true")
+
+            signingConfig = signingConfigs.getByName("debug") // Replace with actual signing config
+        }
+
+        create("staging") {
+            initWith(getByName("debug"))
+            applicationIdSuffix = ".staging"
+            versionNameSuffix = "-staging"
+            buildConfigField("String", "API_BASE_URL", "\"https://birjob-backend-staging.herokuapp.com/\"")
+            buildConfigField("boolean", "ENABLE_LOGGING", "true")
+            buildConfigField("boolean", "ENABLE_CRASH_REPORTING", "true")
+            isMinifyEnabled = true
+            proguardFiles(
+                getDefaultProguardFile("proguard-android-optimize.txt"),
+                "proguard-rules.pro"
+            )
+        }
+    }
+
+    compileOptions {
+        sourceCompatibility = JavaVersion.VERSION_1_8
+        targetCompatibility = JavaVersion.VERSION_1_8
+        isCoreLibraryDesugaringEnabled = true
+    }
+
+    kotlinOptions {
+        jvmTarget = "1.8"
+        freeCompilerArgs += listOf(
+            "-opt-in=androidx.compose.material3.ExperimentalMaterial3Api",
+            "-opt-in=androidx.compose.foundation.ExperimentalFoundationApi",
+            "-opt-in=androidx.compose.animation.ExperimentalAnimationApi",
+            "-opt-in=kotlinx.coroutines.ExperimentalCoroutinesApi",
+            "-opt-in=androidx.compose.ui.ExperimentalComposeUiApi"
+        )
+    }
+
+    buildFeatures {
+        compose = true
+        buildConfig = true
+    }
+
+    composeOptions {
+        kotlinCompilerExtensionVersion = rootProject.extra["compose_compiler_version"] as String
+    }
+
+    packaging {
+        resources {
+            excludes += "/META-INF/{AL2.0,LGPL2.1}"
+            excludes += "/META-INF/gradle/incremental.annotation.processors"
+        }
+    }
+
+    testOptions {
+        unitTests {
+            isIncludeAndroidResources = true
+            isReturnDefaultValues = true
+        }
+        
+        compileOptions {
+            sourceCompatibility = JavaVersion.VERSION_1_8
+            targetCompatibility = JavaVersion.VERSION_1_8
+        }
+    }
+}
+
+dependencies {
+    val composeVersion = rootProject.extra["compose_version"] as String
+    val hiltVersion = rootProject.extra["hilt_version"] as String
+    val roomVersion = rootProject.extra["room_version"] as String
+    val retrofitVersion = rootProject.extra["retrofit_version"] as String
+    val okhttpVersion = rootProject.extra["okhttp_version"] as String
+    val lifecycleVersion = rootProject.extra["lifecycle_version"] as String
+    val navigationVersion = rootProject.extra["navigation_version"] as String
+
+    // Core Android Dependencies
+    implementation("androidx.core:core-ktx:1.12.0")
+    implementation("androidx.lifecycle:lifecycle-runtime-ktx:$lifecycleVersion")
+    implementation("androidx.activity:activity-compose:1.8.2")
+    implementation("androidx.core:core-splashscreen:1.0.1")
+    coreLibraryDesugaring("com.android.tools:desugar_jdk_libs:2.0.4")
+
+    // Compose BOM - ensures all compose libraries use compatible versions
+    implementation(platform("androidx.compose:compose-bom:2024.02.00"))
+    implementation("androidx.compose.ui:ui")
+    implementation("androidx.compose.ui:ui-graphics")
+    implementation("androidx.compose.ui:ui-tooling-preview")
+    implementation("androidx.compose.material3:material3")
+    implementation("androidx.compose.material3:material3-window-size-class")
+    implementation("androidx.compose.material:material-icons-extended")
+    implementation("androidx.compose.animation:animation")
+    implementation("androidx.compose.foundation:foundation")
+    implementation("androidx.compose.runtime:runtime-livedata")
+
+    // Navigation Compose
+    implementation("androidx.navigation:navigation-compose:$navigationVersion")
+    implementation("androidx.navigation:navigation-runtime-ktx:$navigationVersion")
+
+    // ViewModel Compose
+    implementation("androidx.lifecycle:lifecycle-viewmodel-compose:$lifecycleVersion")
+    implementation("androidx.lifecycle:lifecycle-runtime-compose:$lifecycleVersion")
+
+    // Hilt Dependency Injection
+    implementation("com.google.dagger:hilt-android:$hiltVersion")
+    kapt("com.google.dagger:hilt-compiler:$hiltVersion")
+    implementation("androidx.hilt:hilt-navigation-compose:1.1.0")
+    implementation("androidx.hilt:hilt-work:1.1.0")
+    kapt("androidx.hilt:hilt-compiler:1.1.0")
+
+    // Networking
+    implementation("com.squareup.retrofit2:retrofit:$retrofitVersion")
+    implementation("com.squareup.retrofit2:converter-gson:$retrofitVersion")
+    implementation("com.squareup.retrofit2:converter-kotlinx-serialization:1.0.0")
+    implementation("com.squareup.okhttp3:okhttp:$okhttpVersion")
+    implementation("com.squareup.okhttp3:logging-interceptor:$okhttpVersion")
+    implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.6.2")
+
+    // Room Database
+    implementation("androidx.room:room-runtime:$roomVersion")
+    implementation("androidx.room:room-ktx:$roomVersion")
+    kapt("androidx.room:room-compiler:$roomVersion")
+    implementation("androidx.room:room-paging:$roomVersion")
+
+    // Paging 3
+    implementation("androidx.paging:paging-runtime-ktx:3.2.1")
+    implementation("androidx.paging:paging-compose:3.2.1")
+
+    // DataStore (for preferences)
+    implementation("androidx.datastore:datastore-preferences:1.0.0")
+
+    // Work Manager
+    implementation("androidx.work:work-runtime-ktx:2.9.0")
+
+    // Firebase
+    implementation(platform("com.google.firebase:firebase-bom:32.7.0"))
+    implementation("com.google.firebase:firebase-messaging-ktx")
+    implementation("com.google.firebase:firebase-analytics-ktx")
+    implementation("com.google.firebase:firebase-crashlytics-ktx")
+    implementation("com.google.firebase:firebase-config-ktx")
+
+    // Image Loading
+    implementation("io.coil-kt:coil-compose:2.5.0")
+
+    // Charts for Analytics
+    implementation("com.github.PhilJay:MPAndroidChart:v3.1.0")
+    implementation("co.yml:ycharts:2.1.0")
+
+    // WebView
+    implementation("androidx.webkit:webkit:1.9.0")
+    implementation("com.google.accompanist:accompanist-webview:0.32.0")
+
+    // Date/Time
+    implementation("org.jetbrains.kotlinx:kotlinx-datetime:0.5.0")
+
+    // Permissions
+    implementation("com.google.accompanist:accompanist-permissions:0.32.0")
+
+    // System UI Controller
+    implementation("com.google.accompanist:accompanist-systemuicontroller:0.32.0")
+
+    // Lottie Animations
+    implementation("com.airbnb.android:lottie-compose:6.3.0")
+
+    // Timber Logging
+    implementation("com.jakewharton.timber:timber:5.0.1")
+
+    // Testing Dependencies
+    testImplementation("junit:junit:4.13.2")
+    testImplementation("org.jetbrains.kotlinx:kotlinx-coroutines-test:1.7.3")
+    testImplementation("androidx.arch.core:core-testing:2.2.0")
+    testImplementation("com.google.truth:truth:1.1.4")
+    testImplementation("org.mockito:mockito-core:5.8.0")
+    testImplementation("org.mockito.kotlin:mockito-kotlin:5.2.1")
+    testImplementation("androidx.room:room-testing:$roomVersion")
+    testImplementation("com.squareup.okhttp3:mockwebserver:$okhttpVersion")
+    testImplementation("androidx.work:work-testing:2.9.0")
+
+    // Android Instrumentation Testing
+    androidTestImplementation("androidx.test.ext:junit:1.1.5")
+    androidTestImplementation("androidx.test.espresso:espresso-core:3.5.1")
+    androidTestImplementation("androidx.test.espresso:espresso-intents:3.5.1")
+    androidTestImplementation("androidx.compose.ui:ui-test-junit4")
+    androidTestImplementation("androidx.navigation:navigation-testing:$navigationVersion")
+    androidTestImplementation("com.google.dagger:hilt-android-testing:$hiltVersion")
+    kaptAndroidTest("com.google.dagger:hilt-compiler:$hiltVersion")
+    androidTestImplementation("androidx.work:work-testing:2.9.0")
+
+    // Debug Tools
+    debugImplementation("androidx.compose.ui:ui-tooling")
+    debugImplementation("androidx.compose.ui:ui-test-manifest")
+    debugImplementation("com.squareup.leakcanary:leakcanary-android:2.12")
+}
+```
+
+---
+
+## Database Layer - Complete Room Implementation
+
+### **Complete Database Schema**
+
+#### Entity Definitions
+
+##### JobEntity.kt
+```kotlin
+@Entity(
+    tableName = "jobs",
+    indices = [
+        Index(value = ["title"]),
+        Index(value = ["company"]),
+        Index(value = ["location"]),
+        Index(value = ["source"]),
+        Index(value = ["posted_at"]),
+        Index(value = ["is_remote"]),
+        Index(value = ["created_at"])
+    ]
+)
+data class JobEntity(
+    @PrimaryKey
+    @ColumnInfo(name = "id")
+    val id: Int,
+    
+    @ColumnInfo(name = "title")
+    val title: String,
+    
+    @ColumnInfo(name = "company")
+    val company: String,
+    
+    @ColumnInfo(name = "location")
+    val location: String,
+    
+    @ColumnInfo(name = "apply_link")
+    val applyLink: String,
+    
+    @ColumnInfo(name = "source")
+    val source: String,
+    
+    @ColumnInfo(name = "posted_at")
+    val postedAt: String,
+    
+    @ColumnInfo(name = "description")
+    val description: String = "",
+    
+    @ColumnInfo(name = "requirements")
+    val requirements: String = "", // JSON string
+    
+    @ColumnInfo(name = "benefits")
+    val benefits: String = "", // JSON string
+    
+    @ColumnInfo(name = "salary_min")
+    val salaryMin: Int? = null,
+    
+    @ColumnInfo(name = "salary_max")
+    val salaryMax: Int? = null,
+    
+    @ColumnInfo(name = "salary_currency")
+    val salaryCurrency: String = "USD",
+    
+    @ColumnInfo(name = "salary_period")
+    val salaryPeriod: String = "YEARLY",
+    
+    @ColumnInfo(name = "job_type")
+    val jobType: String = "FULL_TIME",
+    
+    @ColumnInfo(name = "experience_level")
+    val experienceLevel: String = "MID_LEVEL",
+    
+    @ColumnInfo(name = "is_remote")
+    val isRemote: Boolean = false,
+    
+    @ColumnInfo(name = "created_at")
+    val createdAt: Long = System.currentTimeMillis(),
+    
+    @ColumnInfo(name = "updated_at")
+    val updatedAt: Long = System.currentTimeMillis()
+)
+```
+
+##### SavedJobEntity.kt
+```kotlin
+@Entity(
+    tableName = "saved_jobs",
+    indices = [
+        Index(value = ["job_id"], unique = true),
+        Index(value = ["saved_at"])
+    ]
+)
+data class SavedJobEntity(
+    @PrimaryKey(autoGenerate = true)
+    @ColumnInfo(name = "id")
+    val id: Long = 0,
+    
+    @ColumnInfo(name = "job_id")
+    val jobId: Int,
+    
+    @ColumnInfo(name = "saved_at")
+    val savedAt: Long = System.currentTimeMillis(),
+    
+    @ColumnInfo(name = "notes")
+    val notes: String = ""
+)
+```
+
+##### NotificationEntity.kt
+```kotlin
+@Entity(
+    tableName = "notifications",
+    indices = [
+        Index(value = ["notification_id"], unique = true),
+        Index(value = ["type"]),
+        Index(value = ["is_read"]),
+        Index(value = ["created_at"])
+    ]
+)
+data class NotificationEntity(
+    @PrimaryKey(autoGenerate = true)
+    @ColumnInfo(name = "id")
+    val id: Long = 0,
+    
+    @ColumnInfo(name = "notification_id")
+    val notificationId: String,
+    
+    @ColumnInfo(name = "type")
+    val type: String,
+    
+    @ColumnInfo(name = "title")
+    val title: String,
+    
+    @ColumnInfo(name = "message")
+    val message: String,
+    
+    @ColumnInfo(name = "matched_keywords")
+    val matchedKeywords: String, // JSON array
+    
+    @ColumnInfo(name = "job_count")
+    val jobCount: Int,
+    
+    @ColumnInfo(name = "jobs_data")
+    val jobsData: String, // JSON array of jobs
+    
+    @ColumnInfo(name = "is_read")
+    val isRead: Boolean = false,
+    
+    @ColumnInfo(name = "created_at")
+    val createdAt: String,
+    
+    @ColumnInfo(name = "received_at")
+    val receivedAt: Long = System.currentTimeMillis()
+)
+```
+
+##### SearchHistoryEntity.kt
+```kotlin
+@Entity(
+    tableName = "search_history",
+    indices = [
+        Index(value = ["query"]),
+        Index(value = ["searched_at"]),
+        Index(value = ["result_count"])
+    ]
+)
+data class SearchHistoryEntity(
+    @PrimaryKey(autoGenerate = true)
+    @ColumnInfo(name = "id")
+    val id: Long = 0,
+    
+    @ColumnInfo(name = "query")
+    val query: String,
+    
+    @ColumnInfo(name = "location")
+    val location: String? = null,
+    
+    @ColumnInfo(name = "result_count")
+    val resultCount: Int,
+    
+    @ColumnInfo(name = "searched_at")
+    val searchedAt: Long = System.currentTimeMillis()
+)
+```
+
+### **Complete DAO Implementations**
+
+#### JobDao.kt
+```kotlin
+@Dao
+interface JobDao {
+    
+    // Basic CRUD Operations
+    @Query("SELECT * FROM jobs WHERE id = :jobId")
+    suspend fun getJobById(jobId: Int): JobEntity?
+    
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    suspend fun insertJob(job: JobEntity)
+    
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    suspend fun insertJobs(jobs: List<JobEntity>)
+    
+    @Update
+    suspend fun updateJob(job: JobEntity)
+    
+    @Delete
+    suspend fun deleteJob(job: JobEntity)
+    
+    @Query("DELETE FROM jobs WHERE id = :jobId")
+    suspend fun deleteJobById(jobId: Int)
+    
+    // Search Operations
+    @Query("""
+        SELECT * FROM jobs 
+        WHERE (:query IS NULL OR title LIKE '%' || :query || '%' 
+               OR company LIKE '%' || :query || '%'
+               OR description LIKE '%' || :query || '%')
+        AND (:location IS NULL OR location LIKE '%' || :location || '%')
+        AND (:isRemote IS NULL OR is_remote = :isRemote)
+        AND (:jobType IS NULL OR job_type = :jobType)
+        AND (:minSalary IS NULL OR salary_min >= :minSalary)
+        AND (:maxSalary IS NULL OR salary_max <= :maxSalary)
+        ORDER BY posted_at DESC, created_at DESC
+        LIMIT :limit OFFSET :offset
+    """)
+    suspend fun searchJobs(
+        query: String?,
+        location: String?,
+        isRemote: Boolean?,
+        jobType: String?,
+        minSalary: Int?,
+        maxSalary: Int?,
+        limit: Int,
+        offset: Int
+    ): List<JobEntity>
+    
+    @Query("""
+        SELECT COUNT(*) FROM jobs 
+        WHERE (:query IS NULL OR title LIKE '%' || :query || '%' 
+               OR company LIKE '%' || :query || '%'
+               OR description LIKE '%' || :query || '%')
+        AND (:location IS NULL OR location LIKE '%' || :location || '%')
+        AND (:isRemote IS NULL OR is_remote = :isRemote)
+        AND (:jobType IS NULL OR job_type = :jobType)
+        AND (:minSalary IS NULL OR salary_min >= :minSalary)
+        AND (:maxSalary IS NULL OR salary_max <= :maxSalary)
+    """)
+    suspend fun getSearchResultCount(
+        query: String?,
+        location: String?,
+        isRemote: Boolean?,
+        jobType: String?,
+        minSalary: Int?,
+        maxSalary: Int?
+    ): Int
+    
+    // Saved Jobs Operations
+    @Query("""
+        SELECT j.* FROM jobs j
+        INNER JOIN saved_jobs s ON j.id = s.job_id
+        ORDER BY s.saved_at DESC
+    """)
+    suspend fun getSavedJobs(): List<JobEntity>
+    
+    @Query("""
+        SELECT j.* FROM jobs j
+        INNER JOIN saved_jobs s ON j.id = s.job_id
+        ORDER BY s.saved_at DESC
+    """)
+    fun getSavedJobsPaged(): PagingSource<Int, JobEntity>
+    
+    @Query("SELECT COUNT(*) FROM saved_jobs")
+    suspend fun getSavedJobsCount(): Int
+    
+    @Query("SELECT EXISTS(SELECT 1 FROM saved_jobs WHERE job_id = :jobId)")
+    suspend fun isJobSaved(jobId: Int): Boolean
+    
+    // Analytics Queries
+    @Query("SELECT company, COUNT(*) as count FROM jobs GROUP BY company ORDER BY count DESC LIMIT :limit")
+    suspend fun getTopCompaniesByJobCount(limit: Int): List<CompanyJobCount>
+    
+    @Query("SELECT location, COUNT(*) as count FROM jobs GROUP BY location ORDER BY count DESC LIMIT :limit")
+    suspend fun getTopLocationsByJobCount(limit: Int): List<LocationJobCount>
+    
+    @Query("SELECT job_type, COUNT(*) as count FROM jobs GROUP BY job_type ORDER BY count DESC")
+    suspend fun getJobTypeDistribution(): List<JobTypeCount>
+    
+    @Query("SELECT COUNT(*) FROM jobs WHERE is_remote = 1")
+    suspend fun getRemoteJobsCount(): Int
+    
+    @Query("SELECT COUNT(*) FROM jobs")
+    suspend fun getTotalJobsCount(): Int
+    
+    @Query("SELECT AVG(salary_min) FROM jobs WHERE salary_min IS NOT NULL")
+    suspend fun getAverageSalary(): Double?
+    
+    // Cleanup Operations
+    @Query("DELETE FROM jobs WHERE created_at < :timestamp")
+    suspend fun deleteJobsOlderThan(timestamp: Long)
+    
+    @Query("SELECT COUNT(*) FROM jobs")
+    suspend fun getJobCount(): Int
+    
+    // Recent Jobs
+    @Query("SELECT * FROM jobs ORDER BY created_at DESC LIMIT :limit")
+    suspend fun getRecentJobs(limit: Int): List<JobEntity>
+}
+
+// Helper data classes for analytics
+data class CompanyJobCount(val company: String, val count: Int)
+data class LocationJobCount(val location: String, val count: Int)
+data class JobTypeCount(val jobType: String, val count: Int)
+```
+
+#### SavedJobDao.kt
+```kotlin
+@Dao
+interface SavedJobDao {
+    
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    suspend fun insertSavedJob(savedJob: SavedJobEntity)
+    
+    @Query("DELETE FROM saved_jobs WHERE job_id = :jobId")
+    suspend fun deleteSavedJob(jobId: Int)
+    
+    @Query("SELECT * FROM saved_jobs ORDER BY saved_at DESC")
+    suspend fun getAllSavedJobs(): List<SavedJobEntity>
+    
+    @Query("SELECT * FROM saved_jobs WHERE job_id = :jobId")
+    suspend fun getSavedJob(jobId: Int): SavedJobEntity?
+    
+    @Query("SELECT EXISTS(SELECT 1 FROM saved_jobs WHERE job_id = :jobId)")
+    suspend fun isJobSaved(jobId: Int): Boolean
+    
+    @Query("SELECT COUNT(*) FROM saved_jobs")
+    suspend fun getSavedJobsCount(): Int
+    
+    @Query("DELETE FROM saved_jobs")
+    suspend fun deleteAllSavedJobs()
+    
+    @Update
+    suspend fun updateSavedJob(savedJob: SavedJobEntity)
+}
+```
+
+#### NotificationDao.kt
+```kotlin
+@Dao
+interface NotificationDao {
+    
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    suspend fun insertNotification(notification: NotificationEntity)
+    
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    suspend fun insertNotifications(notifications: List<NotificationEntity>)
+    
+    @Query("SELECT * FROM notifications ORDER BY received_at DESC")
+    suspend fun getAllNotifications(): List<NotificationEntity>
+    
+    @Query("SELECT * FROM notifications ORDER BY received_at DESC LIMIT :limit OFFSET :offset")
+    suspend fun getNotificationsPaged(limit: Int, offset: Int): List<NotificationEntity>
+    
+    @Query("SELECT * FROM notifications ORDER BY received_at DESC")
+    fun getNotificationsPagingSource(): PagingSource<Int, NotificationEntity>
+    
+    @Query("SELECT * FROM notifications WHERE notification_id = :notificationId")
+    suspend fun getNotificationById(notificationId: String): NotificationEntity?
+    
+    @Query("UPDATE notifications SET is_read = 1 WHERE notification_id = :notificationId")
+    suspend fun markNotificationAsRead(notificationId: String)
+    
+    @Query("UPDATE notifications SET is_read = 1")
+    suspend fun markAllNotificationsAsRead()
+    
+    @Query("SELECT COUNT(*) FROM notifications WHERE is_read = 0")
+    suspend fun getUnreadNotificationsCount(): Int
+    
+    @Query("SELECT COUNT(*) FROM notifications")
+    suspend fun getTotalNotificationsCount(): Int
+    
+    @Query("DELETE FROM notifications WHERE notification_id = :notificationId")
+    suspend fun deleteNotification(notificationId: String)
+    
+    @Query("DELETE FROM notifications")
+    suspend fun deleteAllNotifications()
+    
+    @Query("SELECT * FROM notifications WHERE is_read = 0 ORDER BY received_at DESC")
+    suspend fun getUnreadNotifications(): List<NotificationEntity>
+    
+    @Query("SELECT * FROM notifications WHERE type = :type ORDER BY received_at DESC")
+    suspend fun getNotificationsByType(type: String): List<NotificationEntity>
+    
+    @Query("DELETE FROM notifications WHERE received_at < :timestamp")
+    suspend fun deleteNotificationsOlderThan(timestamp: Long)
+}
+```
+
+#### SearchHistoryDao.kt
+```kotlin
+@Dao
+interface SearchHistoryDao {
+    
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    suspend fun insertSearchHistory(searchHistory: SearchHistoryEntity)
+    
+    @Query("SELECT * FROM search_history ORDER BY searched_at DESC LIMIT :limit")
+    suspend fun getRecentSearches(limit: Int = 10): List<SearchHistoryEntity>
+    
+    @Query("SELECT DISTINCT query FROM search_history WHERE query LIKE :query || '%' ORDER BY searched_at DESC LIMIT :limit")
+    suspend fun getSearchSuggestions(query: String, limit: Int = 5): List<String>
+    
+    @Query("DELETE FROM search_history WHERE id = :id")
+    suspend fun deleteSearchHistory(id: Long)
+    
+    @Query("DELETE FROM search_history")
+    suspend fun deleteAllSearchHistory()
+    
+    @Query("SELECT COUNT(*) FROM search_history")
+    suspend fun getSearchHistoryCount(): Int
+    
+    @Query("DELETE FROM search_history WHERE searched_at < :timestamp")
+    suspend fun deleteSearchHistoryOlderThan(timestamp: Long)
+    
+    @Query("SELECT AVG(result_count) FROM search_history")
+    suspend fun getAverageSearchResultCount(): Double
+}
+```
+
+### **Database Configuration**
+
+#### BirJobDatabase.kt
+```kotlin
+@Database(
+    entities = [
+        JobEntity::class,
+        SavedJobEntity::class,
+        NotificationEntity::class,
+        SearchHistoryEntity::class
+    ],
+    version = 1,
+    exportSchema = true,
+    autoMigrations = []
+)
+@TypeConverters(Converters::class)
+abstract class BirJobDatabase : RoomDatabase() {
+    
+    abstract fun jobDao(): JobDao
+    abstract fun savedJobDao(): SavedJobDao
+    abstract fun notificationDao(): NotificationDao
+    abstract fun searchHistoryDao(): SearchHistoryDao
+    
+    companion object {
+        const val DATABASE_NAME = "birjob_database"
+    }
+}
+```
+
+#### Type Converters
+```kotlin
+class Converters {
+    
+    private val gson = Gson()
+    
+    @TypeConverter
+    fun fromStringList(value: List<String>): String {
+        return gson.toJson(value)
+    }
+    
+    @TypeConverter
+    fun toStringList(value: String): List<String> {
+        return try {
+            gson.fromJson(value, object : TypeToken<List<String>>() {}.type)
+        } catch (e: Exception) {
+            emptyList()
+        }
+    }
+    
+    @TypeConverter
+    fun fromDate(date: Date?): Long? {
+        return date?.time
+    }
+    
+    @TypeConverter
+    fun toDate(timestamp: Long?): Date? {
+        return timestamp?.let { Date(it) }
+    }
+}
+```
+
+This is just the beginning of a much more detailed guide. Would you like me to continue expanding it with more comprehensive implementation details for the remaining sections?
 
 **App Name**: BirJob (Android Version)  
 **Platform**: Android (Kotlin/Java)  
