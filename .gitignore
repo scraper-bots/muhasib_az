@@ -1,9 +1,9 @@
 # Compiled class file
 *.class
-
+.claude
 # Log file
 *.log
-
+venv
 # BlueJ files
 *.ctxt
 
